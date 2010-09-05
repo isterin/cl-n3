@@ -46,7 +46,7 @@
     :licence "New BSD"
     :components ((:file "cl-n3-package")
                  (:file "cl-n3-util")
-                 (:file "cl-n3-lexer")
+                 (:file "cl-n3-lexer" :depends-on ("cl-n3-util"))
                  (:file "cl-n3-parser" :depends-on ("cl-n3-lexer"))
 		 (:file "n3" :depends-on ("cl-n3-package"
                                           "cl-n3-lexer"
