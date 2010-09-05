@@ -15,10 +15,11 @@
     (format stream "#<TOKEN {name: ~a, text: ~a}>" name text)))
 
 (defconstant +END-OF-EXPR+ 2)
-(defconstant +PREFIX-KW+ 3)
-(defconstant +WORD+ 4)
-(defconstant +FQ-IDENTIFIER+ 5)
-(defconstant +STRING+ 6)
+(defconstant +SEPARATOR+ 3)
+(defconstant +DIRECTIVE+ 4)
+(defconstant +WORD+ 5)
+(defconstant +FQ-IDENTIFIER+ 6)
+(defconstant +STRING+ 7)
 
 (defun create-token (name text)
   (make-instance 'token :name name :text text))
@@ -28,19 +29,19 @@
     (create-token name char)))
 
 (defun next-token (stream)
+  (tk-ws stream)
   (let ((la-char (lookahead stream)))
-    (format t "CHAR: ~:c~%" la-char)
-    (if (or (char= la-char #\Newline) (char= la-char #\Space))
-        (tk-ws stream))
     (case la-char
+      ('eof nil)
       (#\. (create-token-and-consume +END-OF-EXPR+ stream))
-      (#\@ (create-token +PREFIX-KW+ (tk-word stream)))
+      (#\; (create-token-and-consume +SEPARATOR+ stream))
+      (#\@ (create-token +DIRECTIVE+ (tk-word stream)))
       (#\" (create-token +STRING+ (tk-string stream)))
       (#\< (create-token +FQ-IDENTIFIER+ (tk-fq-identifier stream)))
-      (otherwise (create-token +WORD+ (word stream))))))
+      (otherwise (create-token +WORD+ (tk-word stream))))))
 
 (defun lookahead (stream)
-  (peek-char nil stream nil))
+  (peek-char nil stream nil 'eof))
 
 (defun consume (stream)
   (read-char stream NIL))
@@ -64,7 +65,7 @@
 
 (defun tk-fq-identifier (stream)
   (consume stream)
-  (buffer-until stream (lambda (char) (char= char #\>))))
+  (buffer-until stream (lambda (char) (char= char #\>)) t))
 
 (defun tk-word (stream)
   (buffer-until stream #'ws-p))
